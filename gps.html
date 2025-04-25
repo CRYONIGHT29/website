@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live GPS Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+      text-align: center;
+    }
+    #location {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .label {
+      font-weight: bold;
+      color: #555;
+    }
+    .value {
+      font-size: 1.2em;
+      color: #222;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📍 Live GPS Tracker</h2>
+  <div id="location">
+    <p>Waiting for location...</p>
+  </div>
+
+  <script>
+    const output = document.getElementById("location");
+
+    function updateLocation(position) {
+      const lat = position.coords.latitude.toFixed(6);
+      const lon = position.coords.longitude.toFixed(6);
+      const accuracy = position.coords.accuracy.toFixed(1);
+      const timestamp = new Date().toISOString();
+
+      output.innerHTML = `
+        <div class="label">Latitude:</div>
+        <div class="value">${lat}</div>
+        <div class="label">Longitude:</div>
+        <div class="value">${lon}</div>
+        <div class="label">Accuracy:</div>
+        <div class="value">${accuracy} meters</div>
+        <div class="label">Last updated:</div>
+        <div class="value">${new Date().toLocaleTimeString()}</div>
+      `;
+
+      // 🔁 Send location to AWS
+      fetch("https://lr5ag5bdo9.execute-api.ap-south-1.amazonaws.com/live/send-gps", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          latitude: lat,
+          longitude: lon,
+          accuracy: accuracy,
+          timestamp: timestamp
+        })
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Network response was not ok");
+        return response.json();
+      })
+      .then(data => console.log("✅ Sent to AWS:", data))
+      .catch(err => {
+        console.error("❌ Fetch error:", err);
+        alert("❌ Failed to send location: " + err.message);
+      });
+    }
+
+    function handleError(error) {
+      console.error("❌ GPS Error:", error);
+      output.innerHTML = `<p style="color:red;">❌ GPS Error: ${error.message}</p>`;
+    }
+
+    function getLocation() {
+      navigator.geolocation.getCurrentPosition(updateLocation, handleError, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      });
+    }
+
+    function startTracking() {
+      if ("geolocation" in navigator) {
+        getLocation();
+        setInterval(getLocation, 5000);
+      } else {
+        output.innerHTML = "Geolocation is not supported by this browser.";
+      }
+    }
+
+    startTracking();
+  </script>
+</body>
+</html>
