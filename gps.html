@@ -55,28 +55,21 @@
         <div class="value">${new Date().toLocaleTimeString()}</div>
       `;
 
-      // 🔁 Send location to AWS
-      fetch("https://lr5ag5bdo9.execute-api.ap-south-1.amazonaws.com/live/send-gps", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          latitude: lat,
-          longitude: lon,
-          accuracy: accuracy,
-          timestamp: timestamp
-        })
-      })
-      .then(response => {
-        if (!response.ok) throw new Error("Network response was not ok");
-        return response.json();
-      })
-      .then(data => console.log("✅ Sent to AWS:", data))
-      .catch(err => {
-        console.error("❌ Fetch error:", err);
-        alert("❌ Failed to send location: " + err.message);
-      });
+// 🔁 Send location to Firebase
+const ref = db.ref("ambulances/AMB001"); // you can replace "AMB001" with a dynamic user ID later
+
+ref.PUSH({
+  latitude: lat,
+  longitude: lon,
+  accuracy: accuracy,
+  timestamp: timestamp
+})
+.then(() => console.log("✅ Sent to Firebase"))
+.catch((error) => {
+  console.error("❌ Firebase write error:", error);
+  alert("❌ Failed to write to Firebase: " + error.message);
+});
+
     }
 
     function handleError(error) {
@@ -103,5 +96,24 @@
 
     startTracking();
   </script>
+  <!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCtxRAZMSTfTs0zVrgFSaZtkVNu0M5BGD4",
+  authDomain: "aots-13497.firebaseapp.com",
+  projectId: "aots-13497",
+  storageBucket: "aots-13497.firebasestorage.app",
+  messagingSenderId: "605826678120",
+  appId: "1:605826678120:web:ccb81fb4f79fd17c166add"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
+
 </body>
 </html>
