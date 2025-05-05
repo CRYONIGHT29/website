@@ -35,7 +35,26 @@
     <p>Waiting for location...</p>
   </div>
 
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js"></script>
+
   <script>
+    // ✅ Correct Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCtxRAZMSTfTs0zVrgFSaZtkVNu0M5BGD4",
+      authDomain: "aots-13497.firebaseapp.com",
+      databaseURL: "https://aots-13497-default-rtdb.firebaseio.com", // ✅ Must include this!
+      projectId: "aots-13497",
+      storageBucket: "aots-13497.appspot.com", // ✅ fixed from .COM
+      messagingSenderId: "605826678120",
+      appId: "1:605826678120:web:ccb81fb4f79fd17c166add"
+    };
+
+    // ✅ Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
     const output = document.getElementById("location");
 
     function updateLocation(position) {
@@ -55,21 +74,19 @@
         <div class="value">${new Date().toLocaleTimeString()}</div>
       `;
 
-// 🔁 Send location to Firebase
-const ref = db.ref("ambulances/AMB001"); // you can replace "AMB001" with a dynamic user ID later
-
-ref.PUSH({
-  latitude: lat,
-  longitude: lon,
-  accuracy: accuracy,
-  timestamp: timestamp
-})
-.then(() => console.log("✅ Sent to Firebase"))
-.catch((error) => {
-  console.error("❌ Firebase write error:", error);
-  alert("❌ Failed to write to Firebase: " + error.message);
-});
-
+      // ✅ Send to Firebase using push()
+      const ref = db.ref("ambulances/AMB001/locations");
+      ref.push({
+        latitude: lat,
+        longitude: lon,
+        accuracy: accuracy,
+        timestamp: timestamp
+      })
+      .then(() => console.log("✅ Sent to Firebase"))
+      .catch((error) => {
+        console.error("❌ Firebase write error:", error);
+        alert("❌ Failed to write to Firebase: " + error.message);
+      });
     }
 
     function handleError(error) {
@@ -80,7 +97,7 @@ ref.PUSH({
     function getLocation() {
       navigator.geolocation.getCurrentPosition(updateLocation, handleError, {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 30000, // increased timeout
         maximumAge: 0
       });
     }
@@ -96,24 +113,6 @@ ref.PUSH({
 
     startTracking();
   </script>
-  <!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js"></script>
-
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCtxRAZMSTfTs0zVrgFSaZtkVNu0M5BGD4",
-  authDomain: "aots-13497.firebaseapp.com",
-  projectId: "aots-13497",
-  storageBucket: "aots-13497.firebasestorage.app",
-  messagingSenderId: "605826678120",
-  appId: "1:605826678120:web:ccb81fb4f79fd17c166add"
-  };
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-</script>
 
 </body>
 </html>
